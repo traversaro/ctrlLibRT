@@ -4,6 +4,8 @@
 #include <yarp/os/Time.h>
 #include <yarp/math/Math.h>
 
+using namespace yarp::math;
+
 #include "filters.h"
 
 /*******************************************************/
@@ -40,25 +42,38 @@ int main(int argc, char *argv[])
     double tic,toc;
 	for(int i = 0; i < nr_of_samples; i++ )
 	{
-		for(int i=0; i < sample_size; i++ )
+		for(int j=0; j < sample_size; j++ )
 		{
-			u[i] = yarp::math::Rand::scalar();
+			u[j] = yarp::math::Rand::scalar();
 		}
 
-	    tic = yarp::os::Time::now();
-	    y = old_filter.filt(u);
-	    toc = yarp::os::Time::now();
+		for(int k=0; k < 2; k++ )
+        {
+            //trick to randomize the order of execution
+            if( (k+i) % 2 == 0 )
+            {
+                tic = yarp::os::Time::now();
+                y = old_filter.filt(u);
+                toc = yarp::os::Time::now();
 
-        old_time += (toc-tic);
+                old_time += (toc-tic);
+            }
+            else
+            {
 
-	    tic = yarp::os::Time::now();
-	    rt_y = new_filter.filt(u);
-	    toc = yarp::os::Time::now();
+                tic = yarp::os::Time::now();
+                rt_y = new_filter.filt(u);
+                toc = yarp::os::Time::now();
 
-        new_time += (toc-tic);
+                new_time += (toc-tic);
+            }
+        }
 	}
-	std::cout << "Time with old filter " << old_time << std::endl;
-	std::cout << "Time with new implementation " << new_time << std::endl;
+	yarp::sig::Vector final_output_diff = rt_y-y;
+    std::cout << "Final sample diff norm " << yarp::math::norm(final_output_diff) << std::endl;
+	std::cout << "Time with old filter (us) " << 1e6*old_time/nr_of_samples << std::endl;
+	std::cout << "Time with new implementation (us) " << 1e6*new_time/nr_of_samples << std::endl;
+    std::cout << "Speedup : " << old_time/new_time << std::endl;
 
 }
 
