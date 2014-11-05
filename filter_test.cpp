@@ -17,6 +17,7 @@ int main(int argc, char *argv[])
 	int coeff_size = opt.check("coeff_size",10,"Size of the coeffient vectors").asInt();
 	int nr_of_samples = opt.check("nr_of_samples",1000,"Nr of samples to filter").asInt();
 	int sample_size = opt.check("sample_size",25,"Size of the sample to filter").asInt();
+        bool verbose = opt.check("verbose");
 
 	yarp::sig::Vector num(coeff_size), den(coeff_size);
 	yarp::sig::Vector rt_y(sample_size), y(sample_size), u(sample_size);
@@ -47,8 +48,8 @@ int main(int argc, char *argv[])
 			u[j] = yarp::math::Rand::scalar();
 		}
 
-		for(int k=0; k < 2; k++ )
-        {
+	    for(int k=0; k < 2; k++ )
+            {
             //trick to randomize the order of execution
             if( (k+i) % 2 == 0 )
             {
@@ -67,10 +68,23 @@ int main(int argc, char *argv[])
 
                 new_time += (toc-tic);
             }
+
+	    }
+
+            if( verbose )
+            {
+                std::cout << "Sample " << i << " : " << std::endl;
+                std::cout << "u    : " << u.toString() << std::endl;
+                std::cout << "y    : " << y.toString() << std::endl;
+                std::cout << "rt_y : " << rt_y.toString() << std::endl;
+            }
+
         }
-	}
 	yarp::sig::Vector final_output_diff = rt_y-y;
-    std::cout << "Final sample diff norm " << yarp::math::norm(final_output_diff) << std::endl;
+     
+        std::cout << "Final sample old norm " << yarp::math::norm(y) << std::endl;
+        std::cout << "Final sample new norm " << yarp::math::norm(rt_y) << std::endl;
+        std::cout << "Final sample diff norm " << yarp::math::norm(final_output_diff) << std::endl;
 	std::cout << "Time with old filter (us) " << 1e6*old_time/nr_of_samples << std::endl;
 	std::cout << "Time with new implementation (us) " << 1e6*new_time/nr_of_samples << std::endl;
     std::cout << "Speedup : " << old_time/new_time << std::endl;
